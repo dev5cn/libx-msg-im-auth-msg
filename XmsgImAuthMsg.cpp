@@ -19,6 +19,8 @@
 
 #include "XmsgImAuthMsg.h"
 #include "mgr/XmsgImMgrNeNetLoad.h"
+#include "mgr/XmsgImMgrNeXscServerQuery.h"
+#include "mgr/XmsgImMgrNeXscWorkerCount.h"
 #include "msg/XmsgImAuthRegSimple.h"
 #include "msg/XmsgImAuthSimple.h"
 #include "ne/XmsgImAuthClientAttachSimple.h"
@@ -45,6 +47,8 @@ void XmsgImAuthMsg::init(vector<shared_ptr<XmsgImN2HMsgMgr>> pubMsgMgrs, shared_
 	X_MSG_N2H_PRPC_AFTER_AUTH(priMsgMgr, XmsgImAuthUsrAuthInfoQueryReq, XmsgImAuthUsrAuthInfoQueryRsp, XmsgImAuthUsrAuthInfoQuery::handle)
 	X_MSG_N2H_PRPC_BEFOR_AUTH(priMsgMgr, XmsgNeAuthReq, XmsgNeAuthRsp, XmsgNeAuth::handle)
 	X_MSG_N2H_PRPC_AFTER_AUTH(priMsgMgr, XmsgImMgrNeNetLoadReq, XmsgImMgrNeNetLoadRsp, XmsgImMgrNeNetLoad::handle)
+	X_MSG_N2H_PRPC_AFTER_AUTH(priMsgMgr, XmsgImMgrNeXscServerQueryReq, XmsgImMgrNeXscServerQueryRsp, XmsgImMgrNeXscServerQuery::handle)
+	X_MSG_N2H_PRPC_AFTER_AUTH(priMsgMgr, XmsgImMgrNeXscWorkerCountReq, XmsgImMgrNeXscWorkerCountRsp, XmsgImMgrNeXscWorkerCount::handle)
 }
 
 XmsgImAuthMsg::~XmsgImAuthMsg()
