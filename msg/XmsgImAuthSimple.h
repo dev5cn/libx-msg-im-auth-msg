@@ -27,6 +27,7 @@ class XmsgImAuthSimple
 public:
 	static void handle(shared_ptr<XscChannel> channel, SptrXitp trans, shared_ptr<XmsgImAuthSimpleReq> req); 
 private:
+	static void fillPubServiceAddr(shared_ptr<XmsgImAuthSimpleRsp> rsp); 
 	XmsgImAuthSimple();
 	virtual ~XmsgImAuthSimple();
 };

@@ -68,9 +68,9 @@ void XmsgImAuthSimple::handle(shared_ptr<XscChannel> channel, SptrXitp trans, sh
 	token->info.reset(new XmsgImClientDeviceInfo());
 	token->info->CopyFrom(req->dev());
 	XmsgImAuthAccountTokenMgr::instance()->add(token); 
-	XmsgImAuthDb::instance()->future([token, req]
+	XmsgImAuthTokenCollOper::instance()->saveToken(token, [token, req](int ret, const string& desc)
 	{
-		if(!XmsgImAuthTokenCollOper::instance()->insert(token)) 
+		if (ret != RET_SUCCESS) 
 		{
 			LOG_ERROR("insert XmsgImAuthTokenColl to database failed, token: %s, req: %s", token->toString().c_str(), req->ShortDebugString().c_str())
 			return;
@@ -82,20 +82,32 @@ void XmsgImAuthSimple::handle(shared_ptr<XscChannel> channel, SptrXitp trans, sh
 	rsp->set_secret(Crypto::aes128enc2hexStrLowerCase(Crypto::sha256ToHexStrLowerCase(req->salt() + account->pwdSha256), token->secret));
 	rsp->set_expired(token->expired);
 	rsp->set_cgt(account->cgt->toString());
-	XmsgImClientServiceAddress* apAddr = rsp->add_apaddr();
-	int port;
-	Net::str2ipAndPort(XmsgImAuthCfg::instance()->cfgPb->misc().xmsgapserviceaddr().c_str(), apAddr->mutable_ip(), &port);
-	apAddr->set_port(port);
-	apAddr->set_weight(100);
-	apAddr->add_proto("tcp");
-	XmsgImClientServiceAddress* fsAddr = rsp->add_fsaddr();
-	Net::str2ipAndPort(XmsgImAuthCfg::instance()->cfgPb->misc().xmsgossserviceaddr().c_str(), fsAddr->mutable_ip(), &port);
-	fsAddr->set_port(port);
-	fsAddr->set_weight(100);
-	fsAddr->add_proto("http");
+	XmsgImAuthSimple::fillPubServiceAddr(rsp);
 	LOG_DEBUG("x-msg-im-usr auth successful, req: %s, rsp: %s", req->ShortDebugString().c_str(), rsp->ShortDebugString().c_str())
 	trans->addOob(XSC_TAG_PLATFORM, req->dev().plat());
 	trans->end(rsp);
+}
+
+void XmsgImAuthSimple::fillPubServiceAddr(shared_ptr<XmsgImAuthSimpleRsp> rsp)
+{
+	for (auto& it : XmsgImAuthCfg::instance()->cfgPb->xmsgapserviceaddr())
+	{
+		auto ap = rsp->add_apaddr();
+		for (auto& addr : it.second.addr())
+		{
+			ap->set_weight(100);
+			XmsgMisc::insertKv(ap->mutable_host(), addr.proto(), addr.host());
+		}
+	}
+	for (auto& it : XmsgImAuthCfg::instance()->cfgPb->xmsgossserviceaddr())
+	{
+		auto oss = rsp->add_ossaddr();
+		for (auto& addr : it.second.addr())
+		{
+			oss->set_weight(100);
+			XmsgMisc::insertKv(oss->mutable_host(), addr.proto(), addr.host());
+		}
+	}
 }
 
 XmsgImAuthSimple::~XmsgImAuthSimple()
